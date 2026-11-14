@@ -1,36 +1,38 @@
-name: "Linting"
-
-on:
+# Optimized by ci-cost (https://github.com/mariotavarez/ci-cost)
+# Applied 2 optimizations:
+# - [HIGH] Add npm dependency cache to "lint" job
+# - [HIGH] Add npm dependency cache to "build" job
+# Estimated savings: ~8 min/run
+#
+name: Linting
+'on':
   workflow_dispatch:
   pull_request:
     branches:
-      - "*"
+      - '*'
   push:
     branches:
-      - "develop"
-      - "main"
-      - "master"
-
+      - develop
+      - main
+      - master
 concurrency:
-  group:
-    ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
-
 permissions:
   contents: read
-
 jobs:
   lint:
     name: Lint
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24
+          cache: npm
       - run: |
           # ci: install exact versions from package-lock.json
           #     fast, secure, predictable compared to npm install
@@ -38,22 +40,22 @@ jobs:
           npm run check
   build:
     name: Build
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24
+          cache: npm
       - name: Build
         run: |
           # ci: install exact versions from package-lock.json
           #     fast, secure, predictable compared to npm install
           npm ci
           npm run build
-
       - name: Check that all built are committed
         run: |
           if [ -n "$(git status --porcelain)" ]; then
